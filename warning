@@ -1,0 +1,414 @@
+(base) clll@why-MS-7B89:~$ cd mq_cplusplus/
+(base) clll@why-MS-7B89:~/mq_cplusplus$ cd mq
+bash: cd: mq: 没有那个文件或目录
+(base) clll@why-MS-7B89:~/mq_cplusplus$ cd mq-master/
+(base) clll@why-MS-7B89:~/mq_cplusplus/mq-master$ make
+g++ -c -g -Wall -std=c++11 mq_util/mq_util.h mq_util/mq_util.cpp
+g++ -c -g -Wall -std=c++11 ini_file/ini_file.h ini_file/ini_file.cpp
+g++ -c -g -Wall -std=c++11 client/client.h client/client.cpp ini_file.o
+client/client.cpp: In member function ‘int WSMQ::Client::RecvPack()’:
+client/client.cpp:556:12: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     if(iLen>sizeof(ClientPackageHead))//缓冲区长度大于头部
+        ~~~~^~~~~~~~
+client/client.cpp:603:16: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         if(iLen>sizeof(ClientPackageHead))
+            ~~~~^~~~~~~~
+client/client.cpp: In member function ‘int WSMQ::Consumer::SendConsumerAck()’:
+client/client.cpp:1103:1: warning: control reaches end of non-void function [-Wreturn-type]
+ }
+ ^
+In file included from client/client.cpp:14:0:
+client/client.h: At global scope:
+client/client.h:105:16: warning: ‘int WSMQ::InitConf(const char*)’ defined but not used [-Wunused-function]
+     static int InitConf(const char *ipPath)
+                ^~~~~~~~
+In file included from client/client.h:10:0,
+                 from client/client.cpp:14:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:14:24: warning: ‘WSMQ::CONF_FILE_PATH’ defined but not used [-Wunused-variable]
+     const static char *CONF_FILE_PATH="./mq_conf/mq_conf.ini";
+                        ^~~~~~~~~~~~~~
+g++: warning: ini_file.o: linker input file unused because linking not done
+g++ -c -g -Wall -std=c++11 message/message.h message/message.cpp
+In file included from message/message.cpp:6:0:
+message/message.h: In constructor ‘WSMQ::CreatePublishMessage::CreatePublishMessage(const string&, const string&, const string&, short int, bool, unsigned char)’:
+message/message.h:118:16: warning: ‘WSMQ::CreatePublishMessage::m_strMsgBody’ will be initialized after [-Wreorder]
+         string m_strMsgBody;
+                ^~~~~~~~~~~~
+message/message.h:114:15: warning:   ‘short int WSMQ::CreatePublishMessage::m_iPriority’ [-Wreorder]
+         short m_iPriority;
+               ^~~~~~~~~~~
+message/message.cpp:141:1: warning:   when initialized here [-Wreorder]
+ CreatePublishMessage::CreatePublishMessage(const string &istrExName,const string &istrKey,
+ ^~~~~~~~~~~~~~~~~~~~
+In file included from message/message.cpp:6:0:
+message/message.h: In constructor ‘WSMQ::SeverStoreMessage::SeverStoreMessage(const string&, short int, bool)’:
+message/message.h:210:16: warning: ‘WSMQ::SeverStoreMessage::m_strMsgBody’ will be initialized after [-Wreorder]
+         string m_strMsgBody;
+                ^~~~~~~~~~~~
+message/message.h:205:15: warning:   ‘short int WSMQ::SeverStoreMessage::m_iPriority’ [-Wreorder]
+         short m_iPriority;
+               ^~~~~~~~~~~
+message/message.cpp:348:1: warning:   when initialized here [-Wreorder]
+ SeverStoreMessage::SeverStoreMessage(const string &istrMsgBody, short iPriority/*=-1*/,bool ibDurable/*=false*/)
+ ^~~~~~~~~~~~~~~~~
+In file included from message/message.h:10:0,
+                 from message/message.cpp:6:
+message/../common_def/comdef.h: At global scope:
+message/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+message/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+message/../common_def/comdef.h:24:24: warning: ‘WSMQ::SERVER_DEFAULT_IP_ADDR’ defined but not used [-Wunused-variable]
+     const static char* SERVER_DEFAULT_IP_ADDR="100.96.188.244";
+                        ^~~~~~~~~~~~~~~~~~~~~~
+message/../common_def/comdef.h:14:24: warning: ‘WSMQ::CONF_FILE_PATH’ defined but not used [-Wunused-variable]
+     const static char *CONF_FILE_PATH="./mq_conf/mq_conf.ini";
+                        ^~~~~~~~~~~~~~
+g++ -c -g -Wall -std=c++11  client/normal_producer.cpp
+In file included from client/client.h:10:0,
+                 from client/normal_producer.cpp:9:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -c -g -Wall -std=c++11 logger/logger.h logger/logger.cpp
+logger/logger.cpp: In member function ‘int WSMQ::Logger::Print(WSMQ::mq_log_level, const char*, ...)’:
+logger/logger.cpp:124:1: warning: no return statement in function returning non-void [-Wreturn-type]
+ }
+ ^
+g++ -g -Wall -std=c++11 -o mq_normal_producer mq_util.o client.o message.o  ini_file.o normal_producer.o logger.o
+g++ -c -g -Wall -std=c++11 client/normal_consumer1.cpp
+client/normal_consumer1.cpp: In function ‘int main(int, char**)’:
+client/normal_consumer1.cpp:23:9: warning: unused variable ‘iRet’ [-Wunused-variable]
+     int iRet = 0;
+         ^~~~
+In file included from client/client.h:10:0,
+                 from client/normal_consumer1.cpp:9:
+client/../common_def/comdef.h: At global scope:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_normal_consumer1 mq_util.o client.o message.o logger.o ini_file.o normal_consumer1.o 
+g++ -c -g -Wall -std=c++11 client/normal_consumer2.cpp
+client/normal_consumer2.cpp: In function ‘int main(int, char**)’:
+client/normal_consumer2.cpp:23:9: warning: unused variable ‘iRet’ [-Wunused-variable]
+     int iRet = 0;
+         ^~~~
+In file included from client/client.h:10:0,
+                 from client/normal_consumer2.cpp:9:
+client/../common_def/comdef.h: At global scope:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_normal_consumer2 mq_util.o client.o message.o logger.o ini_file.o normal_consumer2.o 
+g++ -c -g -Wall -std=c++11 client/ack_producer.cpp
+client/ack_producer.cpp: In function ‘int main(int, char**)’:
+client/ack_producer.cpp:38:9: warning: unused variable ‘iRet’ [-Wunused-variable]
+     int iRet = 0;
+         ^~~~
+In file included from client/client.h:10:0,
+                 from client/ack_producer.cpp:11:
+client/../common_def/comdef.h: At global scope:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_ack_producer mq_util.o client.o message.o logger.o ini_file.o ack_producer.o 
+g++ -c -g -Wall -std=c++11 client/ack_consumer.cpp
+client/ack_consumer.cpp: In function ‘double GetDelayTime(std::__cxx11::string)’:
+client/ack_consumer.cpp:26:12: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     while(i<iStrMsg.size())
+           ~^~~~~~~~~~~~~~~
+client/ack_consumer.cpp:38:9: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     if(i==iStrMsg.size())
+        ~^~~~~~~~~~~~~~~~
+client/ack_consumer.cpp:43:12: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     while(i<iStrMsg.size())
+           ~^~~~~~~~~~~~~~~
+client/ack_consumer.cpp:55:9: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     if(i==iStrMsg.size())
+        ~^~~~~~~~~~~~~~~~
+In file included from client/ack_consumer.cpp:10:0:
+client/client.h: At global scope:
+client/client.h:105:16: warning: ‘int WSMQ::InitConf(const char*)’ defined but not used [-Wunused-function]
+     static int InitConf(const char *ipPath)
+                ^~~~~~~~
+In file included from client/client.h:10:0,
+                 from client/ack_consumer.cpp:10:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:14:24: warning: ‘WSMQ::CONF_FILE_PATH’ defined but not used [-Wunused-variable]
+     const static char *CONF_FILE_PATH="./mq_conf/mq_conf.ini";
+                        ^~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_ack_consumer mq_util.o client.o message.o logger.o ini_file.o ack_consumer.o 
+g++ -c -g -Wall -std=c++11 client/multi_producer.cpp
+client/multi_producer.cpp: In function ‘int main(int, char**)’:
+client/multi_producer.cpp:53:9: warning: unused variable ‘iRet’ [-Wunused-variable]
+     int iRet = 0;
+         ^~~~
+In file included from client/client.h:10:0,
+                 from client/multi_producer.cpp:11:
+client/../common_def/comdef.h: At global scope:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_multi_producer mq_util.o client.o message.o logger.o ini_file.o multi_producer.o 
+g++ -c -g -Wall -std=c++11 client/priority_consumer.cpp
+In file included from client/client.h:10:0,
+                 from client/priority_consumer.cpp:9:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_priority_consumer mq_util.o client.o message.o logger.o ini_file.o priority_consumer.o 
+g++ -c -g -Wall -std=c++11 client/multi_consumer.cpp
+client/multi_consumer.cpp: In function ‘int main(int, char**)’:
+client/multi_consumer.cpp:46:9: warning: unused variable ‘iRet’ [-Wunused-variable]
+     int iRet = 0;
+         ^~~~
+In file included from client/client.h:10:0,
+                 from client/multi_consumer.cpp:13:
+client/../common_def/comdef.h: At global scope:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_multi_consumer mq_util.o client.o message.o logger.o ini_file.o multi_consumer.o 
+g++ -c -g -Wall -std=c++11 client/priority_producer.cpp
+In file included from client/client.h:10:0,
+                 from client/priority_producer.cpp:8:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_priority_producer mq_util.o client.o message.o logger.o ini_file.o priority_producer.o 
+g++ -c -g -Wall -std=c++11 client/pull_consumer.cpp
+client/pull_consumer.cpp: In function ‘int main(int, char**)’:
+client/pull_consumer.cpp:31:9: warning: unused variable ‘iRet’ [-Wunused-variable]
+     int iRet = 0;
+         ^~~~
+In file included from client/client.h:10:0,
+                 from client/pull_consumer.cpp:11:
+client/../common_def/comdef.h: At global scope:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_pull_consumer mq_util.o client.o message.o logger.o ini_file.o pull_consumer.o
+g++ -c -g -Wall -std=c++11 client/durable_producer.cpp
+In file included from client/client.h:10:0,
+                 from client/durable_producer.cpp:9:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_durable_producer mq_util.o client.o message.o logger.o ini_file.o durable_producer.o 
+g++ -c -g -Wall -std=c++11 client/durable_consumer.cpp
+In file included from client/client.h:10:0,
+                 from client/durable_consumer.cpp:8:
+client/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+client/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_durable_consumer mq_util.o client.o message.o logger.o ini_file.o durable_consumer.o
+g++ -c -g -Wall -std=c++11 ./timer/timer.h ./timer/timer.cpp
+g++ -c -g -Wall -std=c++11 shm_queue/shm_queue.h shm_queue/shm_queue.cpp
+shm_queue/shm_queue.cpp: In member function ‘int WSMQ::ShmQueue::Enqueue(const char*, int)’:
+shm_queue/shm_queue.cpp:166:21: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     if(freeSpaceSize<sizeof(DateBlockHead)+iDateLen+sizeof(pTail))
+        ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+shm_queue/shm_queue.cpp: In member function ‘int WSMQ::ShmQueue::Dequeue(char*, int*)’:
+shm_queue/shm_queue.cpp:286:26: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         if(headRightSpace>=sizeof(blockHeader))
+            ~~~~~~~~~~~~~~^~~~~~~~~
+g++ -c -g -Wall -std=c++11 sem_lock/sem_lock.h sem_lock/sem_lock.cpp
+g++ -c -g -Wall -std=c++11 connectServer/clientConnect.h connectServer/clientConnect.cpp
+In file included from connectServer/clientConnect.h:21:0,
+                 from connectServer/clientConnect.cpp:9:
+connectServer/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+connectServer/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+connectServer/../common_def/comdef.h:24:24: warning: ‘WSMQ::SERVER_DEFAULT_IP_ADDR’ defined but not used [-Wunused-variable]
+     const static char* SERVER_DEFAULT_IP_ADDR="100.96.188.244";
+                        ^~~~~~~~~~~~~~~~~~~~~~
+connectServer/../common_def/comdef.h:14:24: warning: ‘WSMQ::CONF_FILE_PATH’ defined but not used [-Wunused-variable]
+     const static char *CONF_FILE_PATH="./mq_conf/mq_conf.ini";
+                        ^~~~~~~~~~~~~~
+g++ -c -g -Wall -std=c++11 connectServer/connectServer.h connectServer/connectServer.cpp
+connectServer/connectServer.cpp: In member function ‘int WSMQ::ConnectServer::Run()’:
+connectServer/connectServer.cpp:629:22: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for(int i=0;i<vSendClients.size();++i)
+                     ~^~~~~~~~~~~~~~~~~~~~
+In file included from connectServer/clientConnect.h:21:0,
+                 from connectServer/connectServer.h:19,
+                 from connectServer/connectServer.cpp:16:
+connectServer/../common_def/comdef.h: At global scope:
+connectServer/../common_def/comdef.h:79:24: warning: ‘WSMQ::DEFAULT_QUEUE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_QUEUE_PATH="./queue/";
+                        ^~~~~~~~~~~~~~~~~~
+connectServer/../common_def/comdef.h:78:24: warning: ‘WSMQ::DEFAULT_EXCHANGE_PATH’ defined but not used [-Wunused-variable]
+     const static char *DEFAULT_EXCHANGE_PATH="./exchange/";
+                        ^~~~~~~~~~~~~~~~~~~~~
+connectServer/../common_def/comdef.h:24:24: warning: ‘WSMQ::SERVER_DEFAULT_IP_ADDR’ defined but not used [-Wunused-variable]
+     const static char* SERVER_DEFAULT_IP_ADDR="100.96.188.244";
+                        ^~~~~~~~~~~~~~~~~~~~~~
+connectServer/connectServer.cpp: In member function ‘int WSMQ::ConnectServer::Init()’:
+connectServer/connectServer.cpp:200:52: warning: ‘cliAddr.sockaddr_in::sin_addr.in_addr::s_addr’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+     pClientConnect->m_iClientAddr=cliAddr.sin_addr.s_addr;//32位ipv4地址
+                                   ~~~~~~~~~~~~~~~~~^~~~~~
+g++ -g -Wall -std=c++11 -o mq_conSrv timer.o shm_queue.o sem_lock.o mq_util.o logger.o clientConnect.o message.o ini_file.o connectServer.o
+g++ -c -g -Wall -std=c++11 logicServer/logicServer.h logicServer/logicServer.cpp
+logicServer/logicServer.h: In member function ‘int WSMQ::MessageQueue::SetPushIndex(int)’:
+logicServer/logicServer.h:92:58: warning: no return statement in function returning non-void [-Wreturn-type]
+         int SetPushIndex(int iIndex){m_iPushIndex=iIndex;}
+                                                          ^
+logicServer/logicServer.h: In member function ‘int WSMQ::MessageQueue::SetNextDaurableIndex(int)’:
+logicServer/logicServer.h:93:69: warning: no return statement in function returning non-void [-Wreturn-type]
+         int SetNextDaurableIndex(int iIndex){m_iDurableIndex=iIndex;}
+                                                                     ^
+In file included from logicServer/logicServer.cpp:18:0:
+logicServer/logicServer.h: In member function ‘int WSMQ::MessageQueue::SetPushIndex(int)’:
+logicServer/logicServer.h:92:58: warning: no return statement in function returning non-void [-Wreturn-type]
+         int SetPushIndex(int iIndex){m_iPushIndex=iIndex;}
+                                                          ^
+logicServer/logicServer.h: In member function ‘int WSMQ::MessageQueue::SetNextDaurableIndex(int)’:
+logicServer/logicServer.h:93:69: warning: no return statement in function returning non-void [-Wreturn-type]
+         int SetNextDaurableIndex(int iIndex){m_iDurableIndex=iIndex;}
+                                                                     ^
+logicServer/logicServer.cpp: In member function ‘int WSMQ::MessageQueue::SerializeSubcribeToString(char*, int&, bool)’:
+logicServer/logicServer.cpp:198:18: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+     for(int i=0;i<m_vSubscribeConsumers.size();++i)
+                 ~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+logicServer/logicServer.cpp: In member function ‘int WSMQ::LogicServer::OnInitMsg()’:
+logicServer/logicServer.cpp:956:26: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+             for(int i=0;i<vIndexFiles.size();++i)
+                         ~^~~~~~~~~~~~~~~~~~~
+logicServer/logicServer.cpp:934:10: warning: unused variable ‘pBuffer’ [-Wunused-variable]
+     char pBuffer[MAX_RDWR_FILE_BUFF_SIZE];
+          ^~~~~~~
+logicServer/logicServer.cpp: In member function ‘std::__cxx11::string WSMQ::LogicServer::FindMessageFileName(int, const char*)’:
+logicServer/logicServer.cpp:1000:20: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+             if(iPos==string::npos)//查找没有匹配
+                ~~~~^~~~~~~~
+logicServer/logicServer.cpp:982:10: warning: unused variable ‘pBuffer’ [-Wunused-variable]
+     char pBuffer[MAX_RDWR_FILE_BUFF_SIZE];
+          ^~~~~~~
+logicServer/logicServer.cpp: In member function ‘int WSMQ::LogicServer::FindIndexFiles(const char*, std::vector<std::__cxx11::basic_string<char> >&)’:
+logicServer/logicServer.cpp:1179:20: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+             if(iPos==string::npos)
+                ~~~~^~~~~~~~
+logicServer/logicServer.cpp:1161:10: warning: unused variable ‘pBuffer’ [-Wunused-variable]
+     char pBuffer[MAX_RDWR_FILE_BUFF_SIZE];
+          ^~~~~~~
+logicServer/logicServer.cpp: In member function ‘int WSMQ::LogicServer::SendMultiAck()’:
+logicServer/logicServer.cpp:1830:1: warning: no return statement in function returning non-void [-Wreturn-type]
+ }
+ ^
+logicServer/logicServer.cpp: In member function ‘int WSMQ::LogicServer::OnStop()’:
+logicServer/logicServer.cpp:2815:1: warning: no return statement in function returning non-void [-Wreturn-type]
+ }
+ ^
+logicServer/logicServer.cpp: In member function ‘int WSMQ::LogicServer::Run()’:
+logicServer/logicServer.cpp:2838:14: warning: unused variable ‘bRecvData’ [-Wunused-variable]
+         bool bRecvData=true;
+              ^~~~~~~~~
+logicServer/logicServer.cpp: In function ‘int main(int, char**)’:
+logicServer/logicServer.cpp:2933:9: warning: unused variable ‘iRet’ [-Wunused-variable]
+     int iRet = 0;
+         ^~~~
+In file included from logicServer/logicServer.cpp:17:0:
+logicServer/../common_def/comdef.h: At global scope:
+logicServer/../common_def/comdef.h:24:24: warning: ‘WSMQ::SERVER_DEFAULT_IP_ADDR’ defined but not used [-Wunused-variable]
+     const static char* SERVER_DEFAULT_IP_ADDR="100.96.188.244";
+                        ^~~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_logicSrv timer.o shm_queue.o sem_lock.o mq_util.o logger.o message.o ini_file.o logicServer.o 
+g++ -c -g -Wall -std=c++11 PersistenceServer/PersistenceServer.h PersistenceServer/PersistenceServer.cpp
+PersistenceServer/PersistenceServer.cpp: In member function ‘int WSMQ::PersistenceServer::OnCreateExchange(char*, int)’:
+PersistenceServer/PersistenceServer.cpp:136:9: warning: unused variable ‘offset’ [-Wunused-variable]
+     int offset=FuncTool::ReadBuf(pTemp,pExchangeName,sizeof(pExchangeName));
+         ^~~~~~
+PersistenceServer/PersistenceServer.cpp: In member function ‘int WSMQ::PersistenceServer::OnCreateQueue(char*, int)’:
+PersistenceServer/PersistenceServer.cpp:165:9: warning: unused variable ‘offset’ [-Wunused-variable]
+     int offset=FuncTool::ReadBuf(pTemp,pQueueName,sizeof(pQueueName));
+         ^~~~~~
+PersistenceServer/PersistenceServer.cpp: In member function ‘int WSMQ::PersistenceServer::OnDeleteExchange(char*, int)’:
+PersistenceServer/PersistenceServer.cpp:194:9: warning: unused variable ‘offset’ [-Wunused-variable]
+     int offset=FuncTool::ReadBuf(pTemp,pExchangeName,sizeof(pExchangeName));
+         ^~~~~~
+PersistenceServer/PersistenceServer.cpp: In member function ‘int WSMQ::PersistenceServer::OnDeleteQueue(char*, int)’:
+PersistenceServer/PersistenceServer.cpp:212:9: warning: unused variable ‘offset’ [-Wunused-variable]
+     int offset=FuncTool::ReadBuf(pTemp,pQueueName,sizeof(pQueueName));
+         ^~~~~~
+PersistenceServer/PersistenceServer.cpp: In member function ‘int WSMQ::PersistenceServer::OnSubcribe(char*, int)’:
+PersistenceServer/PersistenceServer.cpp:234:9: warning: unused variable ‘offset’ [-Wunused-variable]
+     int offset=FuncTool::ReadBuf(pTemp,pQueueName,sizeof(pQueueName));
+         ^~~~~~
+PersistenceServer/PersistenceServer.cpp: In member function ‘int WSMQ::PersistenceServer::OnBinding(char*, int)’:
+PersistenceServer/PersistenceServer.cpp:262:9: warning: unused variable ‘offset’ [-Wunused-variable]
+     int offset=FuncTool::ReadBuf(pTemp,pExchangeName,sizeof(pExchangeName));
+         ^~~~~~
+PersistenceServer/PersistenceServer.cpp: In member function ‘int WSMQ::PersistenceServer::OnPublishMessage(char*, int, std::__cxx11::string, int)’:
+PersistenceServer/PersistenceServer.cpp:296:10: warning: variable ‘bFileFull’ set but not used [-Wunused-but-set-variable]
+     bool bFileFull=false;
+          ^~~~~~~~~
+PersistenceServer/PersistenceServer.cpp: In member function ‘int WSMQ::PersistenceServer::InitFileInfo()’:
+PersistenceServer/PersistenceServer.cpp:521:26: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+             for(int i=0;i<vIndexFiles.size();++i)
+                         ~^~~~~~~~~~~~~~~~~~~
+PersistenceServer/PersistenceServer.cpp:499:10: warning: unused variable ‘pBuffer’ [-Wunused-variable]
+     char pBuffer[MAX_RDWR_FILE_BUFF_SIZE];
+          ^~~~~~~
+PersistenceServer/PersistenceServer.cpp: In member function ‘int WSMQ::PersistenceServer::FindIndexFiles(const char*, std::vector<std::__cxx11::basic_string<char> >&)’:
+PersistenceServer/PersistenceServer.cpp:561:20: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+             if(iPos==string::npos)
+                ~~~~^~~~~~~~
+PersistenceServer/PersistenceServer.cpp:543:10: warning: unused variable ‘pBuffer’ [-Wunused-variable]
+     char pBuffer[MAX_RDWR_FILE_BUFF_SIZE];
+          ^~~~~~~
+In file included from PersistenceServer/PersistenceServer.cpp:14:0:
+PersistenceServer/../common_def/comdef.h: At global scope:
+PersistenceServer/../common_def/comdef.h:24:24: warning: ‘WSMQ::SERVER_DEFAULT_IP_ADDR’ defined but not used [-Wunused-variable]
+     const static char* SERVER_DEFAULT_IP_ADDR="100.96.188.244";
+                        ^~~~~~~~~~~~~~~~~~~~~~
+g++ -g -Wall -std=c++11 -o mq_persisSrv timer.o shm_queue.o sem_lock.o mq_util.o logger.o message.o ini_file.o PersistenceServer.o
+
