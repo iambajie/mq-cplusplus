@@ -1,10 +1,10 @@
 /*
- * @name: 
+ * @name:
  * @test: test font
- * @msg: 
- * @param: 
- * @return: 
- */ 
+ * @msg:
+ * @param:
+ * @return:
+ */
 /**
  * @Descripttion: 通过信号量实现互斥锁，便于加锁解锁以及初始化
  * @Author: readywang
@@ -17,13 +17,14 @@
 namespace WSMQ
 {
     class SemLock
-    { 
-    public:     
-        const static int SUCCESS=0;   
-        const static int ERROR=-1;
-        const static int ERR_SEM_LOCK_INIT=-100;
-        const static int ERR_SEM_LOCK_LOCK=-101;
-        const static int ERR_SEM_LOCK_UNLOCK=-102; 
+    {
+    public:
+        const static int SUCCESS = 0;
+        const static int ERROR = -1;
+        const static int ERR_SEM_LOCK_INIT = -100;
+        const static int ERR_SEM_LOCK_LOCK = -101;
+        const static int ERR_SEM_LOCK_UNLOCK = -102;
+
     public:
         SemLock();
         ~SemLock();
@@ -34,10 +35,11 @@ namespace WSMQ
         {
             return m_pErrMsg;
         }
+
     private:
         int m_iSemKey;
         int m_iSemId;
         char m_pErrMsg[256];
     };
 }
-#endif //INCLUDE_SEM_LOCK_H
+#endif // INCLUDE_SEM_LOCK_H

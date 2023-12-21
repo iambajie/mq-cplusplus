@@ -119,27 +119,26 @@ int PersistenceServer::InitConf(const char *ipPath)
 
 int PersistenceServer::Init()
 {
-    // 初始化配置文件
+    // 1.初始化配置文件
     if (InitConf(CONF_FILE_PATH) != SUCCESS)
     {
         return ERROR;
     }
+    // 2.初始化信号处理器
     InitSigHandler();
-    // 初始化和业务逻辑层的通信通道
+    // 3.初始化两个用于与业务逻辑层进行通信的共享内存队列
     m_pQueueFromLogic = new ShmQueue();
     m_pQueueToLogic = new ShmQueue();
     m_pQueueFromLogic->Init(LOGIC_TO_PERSIS_KEY, SHM_QUEUE_SIZE);
     m_pQueueToLogic->Init(PERSIS_TO_LOGIC_KEY, SHM_QUEUE_SIZE);
 
-    // //持久化层和业务逻辑层通信的共享内存的key
-    // const static int PERSIS_TO_LOGIC_KEY=23456;
-    // const static int LOGIC_TO_PERSIS_KEY=65432;
-    // 初始化文件信息
+    // 4.初始化文件信息
     InitFileInfo();
 
     return SUCCESS;
 }
 
+// 创建一个新的exchange
 int PersistenceServer::OnCreateExchange(char *ipBuffer, int iLen)
 {
     // 读exchange 名称
@@ -231,6 +230,7 @@ int PersistenceServer::OnDeleteQueue(char *ipBuffer, int iLen)
     {
         FuncTool::RemoveDir(strQueueDir.c_str());
     }
+    // 当删除一个队列时，也需要清理与之相关的所有资源，包括在映射中的条目。这样可以释放内存，避免出现无效指向，保持数据的一致性
     if (m_mMsgQueueTailFile.find(strQueueName) != m_mMsgQueueTailFile.end())
     {
         m_mMsgQueueTailFile.erase(strQueueName);
@@ -238,6 +238,8 @@ int PersistenceServer::OnDeleteQueue(char *ipBuffer, int iLen)
     return SUCCESS;
 }
 
+// 处理队列订阅的请求
+// 并没有真正进行 "订阅" 的操作 更新某个订阅者列表
 int PersistenceServer::OnSubcribe(char *ipBuffer, int iLen)
 {
     // 读名称
@@ -266,6 +268,8 @@ int PersistenceServer::OnSubcribe(char *ipBuffer, int iLen)
     return SUCCESS;
 }
 
+// 处理交换机的绑定请求
+// 并没有真正进行 "绑定" 的操作 更新某个交换器与队列的绑定列表
 int PersistenceServer::OnBinding(char *ipBuffer, int iLen)
 {
     // 读exchange 名称
@@ -294,6 +298,22 @@ int PersistenceServer::OnBinding(char *ipBuffer, int iLen)
     fclose(pBindingFile);
     return SUCCESS;
 }
+
+// 处理消息的发布请求
+// 从输入缓冲区 ipBuffer 中读取数据，并将其写入一个文件中，该文件位于给定路径下以队列名命名的文件夹内, 同时创建新的数据和索引文件
+// 假设有一个简单的消息队列，其中包含以下消息：
+// Queue: ["Message 1", "Message 2", "Message 3", "Message 4"]
+// 每个消息在队列中都有一个唯一的索引，这就是 iDurableIndex。例如，"Message 1" 的 iDurableIndex 可能是 0，“Message 2” 的 iDurableIndex 是 1，以此类推。
+
+// 当系统运行时，它会将每个消息以及对应的 iDurableIndex 写入数据文件和索引文件中。例如，当处理 "Message 2" 时，系统可能执行以下操作：
+
+// 将 "Message 2" 写入 .data 文件。
+// 将 iDurableIndex=1 和该消息在 .data 文件中的位置写入 .index 文件。
+// 同时，在处理完 "Message 2" 后，系统还会更新偏移文件，记录下最新的 iDurableIndex=1。
+
+// 现在，如果系统突然崩溃并重新启动，它需要找出上次已经处理到哪个消息。
+// 系统可以查看偏移文件，从中读取到 iDurableIndex=1，然后系统知道 "Message 1" 和 "Message 2" 已经被处理过（即已经持久化），
+// 而 "Message 3" 和 "Message 4" 还未处理。然后，通过 .index 文件，系统可以定位到 "Message 3" 在 .data 文件中的位置，然后继续从 "Message 3" 开始处理。
 
 int PersistenceServer::OnPublishMessage(char *ipBuffer, int iLen, string istrQueueName, int iDurableIndex)
 {
@@ -356,18 +376,28 @@ int PersistenceServer::OnPublishMessage(char *ipBuffer, int iLen, string istrQue
         // 保存消息对应文件
         m_mMsgQueueIndexFile[istrQueueName].insert({iDurableIndex, strWriteFileName});
     }
+    // 追加写入
     pDataFile = fopen(strDataPath.c_str(), "ab+");
     pIndexFile = fopen(strIndexPath.c_str(), "ab+");
     string strOffsetFile = strQueueDir + "/write_offset.bin";
+    // 写方式打开创建文件 会覆盖原有内容
     FILE *pOffsetFile = fopen(strOffsetFile.c_str(), "wb+");
     if (pDataFile == NULL || pIndexFile == NULL || pOffsetFile == NULL)
     {
         return ERROR;
     }
     // 写入数据
+    // 数据文件中写入的是原始消息数据
+    // 索引文件中写入的是消息的索引和对应的写入位置
+    // 偏移文件中写入的是当前的持久化索引
+
+    // 1.写入数据到数据文件: 将 ipBuffer 指向的 iLen 字节的数据写入到数据文件 pDataFile
     fwrite(ipBuffer, iLen, 1, pDataFile);
     fflush(pDataFile);
     fclose(pDataFile);
+
+    // 2.写入数据到索引文件: 将消息的持久化索引和数据文件中的写入位置写入到索引文件 pIndexFile
+    // iDurableIndex 用作了消息队列持久化过程中的关键索引 用来追踪或标识应该被持久化到磁盘的消息的位置或编
     iLen = sizeof(int) + sizeof(int);
     char pBuff[10];
     memset(pBuff, 0, sizeof(pBuff));
@@ -379,6 +409,8 @@ int PersistenceServer::OnPublishMessage(char *ipBuffer, int iLen, string istrQue
     fflush(pIndexFile);
     fclose(pIndexFile);
 
+    // 3.写入数据到偏移文件: 将当前的持久化索引写入到偏移文件 pOffsetFile
+    // 偏移文件只保存了最后写入磁盘的消息的索引, 每次都会被覆写，而不是追加新的内容
     char pIndex[10];
     memset(pIndex, 0, sizeof(pIndex));
     FuncTool::WriteInt(pIndex, iDurableIndex);
@@ -388,6 +420,8 @@ int PersistenceServer::OnPublishMessage(char *ipBuffer, int iLen, string istrQue
     return SUCCESS;
 }
 
+// 处理消息消费，并在消息全部被消费时删除相应文件
+// ipBuffer 表示输入的消息缓冲区，用于读取和处理消息； iLen 是输入消息的长度
 int PersistenceServer::OnConsumeMessage(char *ipBuffer, int iLen)
 {
     // 读名称
@@ -431,6 +465,7 @@ int PersistenceServer::OnConsumeMessage(char *ipBuffer, int iLen)
     fflush(pFile);
     fclose(pFile);
     // 根据当前文件大小计算出已消费消息数目
+    // 已消费的消息数量（iConsumeNum）和本组总消息数量（iMsgNum）
     struct stat buffer;
     if (stat(strFilePath.c_str(), &buffer) != 0)
     {
@@ -480,6 +515,7 @@ int PersistenceServer::OnConsumeMessage(char *ipBuffer, int iLen)
     return SUCCESS;
 }
 
+// 将一个整数转化为长度为10的字符串。如果原始整数的位数少于10位，那么在其前面补零以达到10位的长度
 string PersistenceServer::ConvertIndexToString(int iIndex)
 {
     string strIndex = to_string(iIndex);
@@ -492,6 +528,8 @@ string PersistenceServer::ConvertIndexToString(int iIndex)
     return strIndex;
 }
 
+// 扫描默认队列路径下的所有子文件夹（每个子文件夹可以看作一个消息队列），找出其中的所有索引文件
+// 并进行一些预处理 排序索引文件名、处理索引文件、记录索引文件名等
 int PersistenceServer::InitFileInfo()
 {
     // 建立消息下标和索引文件的关系
@@ -542,6 +580,7 @@ int PersistenceServer::InitFileInfo()
     return SUCCESS;
 }
 
+// 在给定的目录（ipDir）中查找所有的索引文件，并把这些文件的名称保存到向量（ovIndexFiles）
 int PersistenceServer::FindIndexFiles(const char *ipDir, vector<string> &ovIndexFiles)
 {
     // 遍历文件夹中的所有子文件夹
@@ -573,6 +612,7 @@ int PersistenceServer::FindIndexFiles(const char *ipDir, vector<string> &ovIndex
             {
                 continue;
             }
+            //.index 前面的部分作为索引文件名
             strName = strName.substr(0, iPos);
             ovIndexFiles.push_back(strName);
         }
@@ -581,9 +621,9 @@ int PersistenceServer::FindIndexFiles(const char *ipDir, vector<string> &ovIndex
     return SUCCESS;
 }
 
+// 处理消息队列的索引文件, 将索引文件的内容读取到内存中，并构造一个映射为了后续使用
 int PersistenceServer::ProcessIndexFile(string istrQueueName, const char *ipFile)
 {
-    // 获取数据文件和索引文件是否存在
     string strFile = ipFile;
     string strIndexFile = DEFAULT_QUEUE_PATH + istrQueueName + "/" + strFile + ".index";
     int indexFd = open(strIndexFile.c_str(), O_RDONLY);
@@ -598,13 +638,13 @@ int PersistenceServer::ProcessIndexFile(string istrQueueName, const char *ipFile
     }
     int indexFileSize = buf.st_size;
 
-    // 将索引文件和数据文件映射到内存
+    // 将文件映射到进程的地址空间的系统调用
     char *pIndexStart = (char *)mmap(NULL, indexFileSize, PROT_READ, MAP_PRIVATE, indexFd, 0);
     if (pIndexStart == NULL)
     {
         return ERROR;
     }
-    // 遍历所有index，将建立索引关系
+    // 遍历整个内存映射区（即索引文件的全部内容），并从中读取出所有的索引条目
     int iPos = 0;
     while (iPos < indexFileSize)
     {
@@ -621,9 +661,9 @@ int PersistenceServer::ProcessIndexFile(string istrQueueName, const char *ipFile
     return SUCCESS;
 }
 
+// 遍历每个队列的文件链表，将有效信息小于50%的连续两个文件进行合并。记录了处理（即已成功合并）的文件数量 oClearCount
 int PersistenceServer::ClearUpFile(int &oClearCount)
 {
-    // 遍历每个队列的文件链表，将连续的两个有效信息小于50%的文件进行合并,每次只处理一个队列
     oClearCount = 0;
     unordered_map<string, list<string>>::iterator itr1 = m_mMsgQueueList.begin();
     while (itr1 != m_mMsgQueueList.end() && oClearCount == 0)
