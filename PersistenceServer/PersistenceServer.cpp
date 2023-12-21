@@ -662,6 +662,7 @@ int PersistenceServer::ProcessIndexFile(string istrQueueName, const char *ipFile
 }
 
 // 遍历每个队列的文件链表，将有效信息小于50%的连续两个文件进行合并。记录了处理（即已成功合并）的文件数量 oClearCount
+// 每次只合并一对文件
 int PersistenceServer::ClearUpFile(int &oClearCount)
 {
     oClearCount = 0;
@@ -682,6 +683,8 @@ int PersistenceServer::ClearUpFile(int &oClearCount)
                 double prevConsumeRate = CalculateCondsumeRate(strPrevPath.c_str());
                 double curConsumeRate = CalculateCondsumeRate(strCurPath.c_str());
                 // 若两组消费比例均大于0.5则进行合并
+                // 从性能上讲，经常读取和处理大量已消费的消息会浪费CPU资源，因为这些消息可能再也不会被使用。通过合并未消费的消息，程序可以更高效地处理剩余的消息
+                // 从存储管理上讲，保留大量已消费的消息会占用不必要的磁盘空间。当已消费消息的比例超过一定阈值时，删除这些消息并重新组织未消费的消息可以节省存储空间
                 if (prevConsumeRate > 0.5 && curConsumeRate > 0.5)
                 {
                     if (MergeFiles(strQueueName.c_str(), strPrev.c_str(), itr2->c_str()) == SUCCESS)
@@ -700,20 +703,21 @@ int PersistenceServer::ClearUpFile(int &oClearCount)
                     ++itr2;
                 }
             }
-            else
-            {
-                ++itr2;
-            }
+            strPrev = *itr2;
+            ++itr2;
         }
         ++itr1;
     }
     return SUCCESS;
 }
 
+// 根据输入的文件路径，找到相应的索引文件和消费文件，然后根据这两个文件的大小来计算出消息的消费比率
 double PersistenceServer::CalculateCondsumeRate(const char *ipFile)
 {
     string strFile = ipFile;
+    // 索引信息
     string strIndexFile = strFile + ".index";
+    // 消费信息
     string strConsumeFile = strFile + ".consume";
     // 若index文件不存在，直接返回0
     struct stat buf;
@@ -731,15 +735,18 @@ double PersistenceServer::CalculateCondsumeRate(const char *ipFile)
     int consumeFileSize = buf.st_size;
 
     // 计算消息个数和已消费个数
+    // 每个消息需要两个整数的信息来描述，一个表示消息的ID，另一个表示消息的位置
     int iMsgNum = indexFileSize / (sizeof(int) + sizeof(int));
     int iConsumeNum = consumeFileSize / (sizeof(int));
     double rate = (iConsumeNum * 1.0) / iMsgNum;
     return rate;
 }
 
+// 合并两个文件，即ipFileName1和ipFileName2，这两个文件都存在在名为ipQueueName的队列中
 int PersistenceServer::MergeFiles(const char *ipQueueName, const char *ipFileName1, const char *ipFileName2)
 {
     // 获取数据文件、索引文件、消费文件是否存在
+    // 构造了数据（.data）、索引（.index）和消费（.consume）三种类型的文件路径
     string strQueueName = ipQueueName;
     string strFile1 = DEFAULT_QUEUE_PATH + strQueueName + "/" + ipFileName1;
     string strIndexFile1 = strFile1 + ".index";
@@ -1013,8 +1020,8 @@ int PersistenceServer::MergeFiles(const char *ipQueueName, const char *ipFileNam
     munmap(pIndexStart2, indexFileSize2);
 
     // 更新文件内容
-    pDataFile = fopen(strDataFile2.c_str(), "ab+");
-    pIndexFile = fopen(strIndexFile2.c_str(), "ab+");
+    pDataFile = fopen(strDataFile1.c_str(), "ab+");
+    pIndexFile = fopen(strIndexFile1.c_str(), "ab+");
     if (pDataFile == NULL || pIndexFile == NULL)
     {
         delete[] pIndexBuff;
@@ -1033,7 +1040,7 @@ int PersistenceServer::MergeFiles(const char *ipQueueName, const char *ipFileNam
     FuncTool::RemoveFile(strDataFile2.c_str());
     FuncTool::RemoveFile(strConsumeFile2.c_str());
     // 删除第一组文件中的消费文件，因为当前文件组消息均是未消费的
-    FuncTool::RemoveFile(strConsumeFile2.c_str());
+    FuncTool::RemoveFile(strConsumeFile1.c_str());
     return SUCCESS;
 }
 
@@ -1044,13 +1051,16 @@ int PersistenceServer::Run()
         int iDateRecvCount = 0;
         char pBuff[MAX_CLINT_PACKAGE_LENGTH];
         bool bShmQueueEmpty = false;
+        // 准备接收数据，并且在日志中记录这一操作
         PersisServerLogger.WriteLog(mq_log_info, "ready ro recv data...");
         PersisServerLogger.Print(mq_log_info, "ready ro recv data...");
         while (true)
         {
             memset(pBuff, 0, MAX_CLINT_PACKAGE_LENGTH);
             int iLen = MAX_CLINT_PACKAGE_LENGTH;
+            // 服务器从共享内存队列 m_pQueueFromLogic 中读取数据
             int ret = m_pQueueFromLogic->Dequeue(pBuff, &iLen);
+            // 队列为空，而且服务器还未接收到任何数据(iDateRecvCount == 0)
             if (ret == ShmQueue::ERR_SHM_QUEUE_EMPTY)
             {
                 bShmQueueEmpty = (iDateRecvCount == 0);
@@ -1062,7 +1072,7 @@ int PersistenceServer::Run()
             }
             ++iDateRecvCount;
 
-            // 包长度检查
+            // 消息长度检查
             if (iLen < (int)sizeof(unsigned short))
             {
                 continue;
@@ -1075,7 +1085,7 @@ int PersistenceServer::Run()
                 continue;
             }
 
-            // 读取包类型
+            // 读取命令
             unsigned short iCmdId;
             pTemp += offset;
             offset = FuncTool::ReadShort(pTemp, iCmdId);
@@ -1104,6 +1114,7 @@ int PersistenceServer::Run()
                 OnDeleteQueue(pTemp, iLen - sizeof(unsigned short) - sizeof(unsigned short));
                 break;
             }
+            // TODO: subscribe
             case CMD_CREATE_SUBCRIBE:
             case CMD_CANCEL_SUBCRIBE:
             {
